@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: field-monitor-dashboard
+    runtime: node
+    rootDir: sensor-dashboard
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
