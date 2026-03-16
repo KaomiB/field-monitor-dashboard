@@ -427,11 +427,13 @@
     const fire = isFireDetected(data.flame_voltage);
     const gas = isGasDetected(data.gas_voltage);
     const water = isWaterDetected(data.water_voltage);
+    const motion = data.motion_detected === 1;
 
     const items = [
       { id: 'fire', label: 'Fire', status: fire ? 'Detected' : 'OK', icon: 'flame', color: fire ? '#d47a7a' : COLORS.textMuted, triggered: fire },
       { id: 'gas', label: 'Gas', status: gas ? 'Detected' : 'OK', icon: 'gas', color: gas ? COLORS.warn : COLORS.textMuted, triggered: gas, extraClass: 'gas' },
       { id: 'water', label: 'Water', status: water ? 'Detected' : 'OK', icon: 'waterLevel', color: water ? COLORS.water : COLORS.textMuted, triggered: water, extraClass: 'water' },
+      { id: 'motion', label: 'Motion', status: motion ? 'Motion!' : 'Clear', icon: 'gas', color: motion ? COLORS.trail : COLORS.textMuted, triggered: motion, extraClass: 'motion' },
     ];
 
     items.forEach(it => {

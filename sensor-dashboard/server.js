@@ -77,35 +77,32 @@ function loadState() {
 let dirty = false;
 const sseClients = new Set();
 
-// Alert LED preference: when true, POST /api/data response includes led: { v2, v3, v4, v15 }
-// for board NeoPixel (V2=R, V3=G, V4=B, V15=brightness). Fire=red, gas=yellow, water=blue (intensity).
+// Alert LED: when true, POST response includes led: { v2, v3, v4, v15 }. Colors combine: fire=red, gas=yellow, water=blue, motion=green.
 let alertLedEnabled = false;
 const FLAME_ALERT_MAX_V = 2.0;
 const GAS_ALERT_MIN_V = 0.8;
-// Immersion: trigger when voltage >= this (wet); clear when < WATER_CLEAR_MAX_V (hysteresis avoids flicker)
 const WATER_ALERT_MIN_V = 0.75;
 const WATER_CLEAR_MAX_V = 0.55;
 let lastWaterLedOn = false;
 
 function computeLedCommand() {
-  if (!alertLedEnabled) return null;
   const c = current;
-  if (c.flame_voltage != null && c.flame_voltage < FLAME_ALERT_MAX_V) {
-    return { v2: 255, v3: 0, v4: 0, v15: 255 };
-  }
-  if (c.gas_voltage != null && c.gas_voltage >= GAS_ALERT_MIN_V) {
-    return { v2: 255, v3: 165, v4: 0, v15: 255 };
-  }
-  // Water: hysteresis — trigger >= 0.75 V, clear only when < 0.55 V
+  const fire = c.flame_voltage != null && c.flame_voltage < FLAME_ALERT_MAX_V;
+  const gas = c.gas_voltage != null && c.gas_voltage >= GAS_ALERT_MIN_V;
   const waterNow = c.water_voltage != null && c.water_voltage >= WATER_ALERT_MIN_V;
   const waterClear = c.water_voltage == null || c.water_voltage < WATER_CLEAR_MAX_V;
   const waterOn = lastWaterLedOn ? !waterClear : waterNow;
   lastWaterLedOn = waterOn;
-  if (waterOn && c.water_voltage != null) {
-    const intensity = Math.min(255, Math.round(80 + (c.water_voltage - WATER_ALERT_MIN_V) / (2.5 - WATER_ALERT_MIN_V) * 175));
-    return { v2: 0, v3: 0, v4: 255, v15: Math.max(80, intensity) };
-  }
-  return { v2: 0, v3: 0, v4: 0, v15: 0 };
+  const motion = c.motion_detected === 1;
+  if (!fire && !gas && !waterOn && !motion) return { v2: 0, v3: 0, v4: 0, v15: 0 };
+  // Combined RGB: fire/gas add red, gas adds green 165, water adds blue, motion adds green
+  const r = (fire || gas) ? 255 : 0;
+  const g = motion ? 255 : (gas ? 165 : 0);
+  const b = waterOn ? 255 : 0;
+  const intensity = waterOn && c.water_voltage != null
+    ? Math.min(255, Math.round(80 + (c.water_voltage - WATER_ALERT_MIN_V) / (2.5 - WATER_ALERT_MIN_V) * 175))
+    : 255;
+  return { v2: r, v3: g, v4: b, v15: Math.max(80, intensity) };
 }
 
 function broadcastSSE(eventName, data) {
@@ -206,8 +203,8 @@ function handleIngest(req, res) {
   }
   mergeCurrent(payload);
   const body = { ok: true, updated_at: current.updated_at };
-  const led = computeLedCommand();
-  if (led) body.led = led;
+  // Always send combined LED so the board shows fire+water (e.g. magenta) instead of swapping single colors
+  body.led = computeLedCommand();
   res.status(202).json(body);
 }
 
