@@ -46,10 +46,11 @@
     return icons[name] || '';
   }
 
-  // Alert thresholds: flame drops near fire; gas rises with gas; water rises when wet
+  // Alert thresholds: flame drops near fire; gas rises with gas; water rises when wet (immersion)
   const FLAME_ALERT_MAX_V = 2.0;
   const GAS_ALERT_MIN_V = 0.8;
-  const WATER_ALERT_MIN_V = 1.0;
+  const WATER_ALERT_MIN_V = 0.75;   // immersion trigger (V) — sensor reads higher when probes wet
+  const WATER_CLEAR_MAX_V = 0.55;   // below this = dry (hysteresis on server for LED)
 
   function isFireDetected(v) { return v != null && v < FLAME_ALERT_MAX_V; }
   function isGasDetected(v) { return v != null && v >= GAS_ALERT_MIN_V; }
@@ -77,8 +78,8 @@
 
   function getWaterLevelCondition(v) {
     if (v == null) return { label: '—', icon: 'waterLevel', color: COLORS.textMuted };
-    if (v < WATER_LOW_MAX) return { label: 'Low', icon: 'waterLevel', color: COLORS.textMuted };
-    if (v <= WATER_MID_MAX) return { label: 'Medium', icon: 'waterLevel', color: COLORS.water };
+    if (v < WATER_LOW_MAX) return { label: 'Dry', icon: 'waterLevel', color: COLORS.textMuted };
+    if (v <= WATER_MID_MAX) return { label: 'Immersion', icon: 'waterLevel', color: COLORS.water };
     return { label: 'High', icon: 'waterLevel', color: '#4a8bc2' };
   }
 
@@ -267,6 +268,11 @@
         barTrack.appendChild(barFill);
         card.appendChild(barTrack);
       }
+      if (f.key === 'water_voltage') {
+        const hint = el('div', { className: 'card-hint', style: 'font-size:10px;color:var(--text-muted);margin-top:4px;' });
+        hint.textContent = 'Dry < 0.75 V · Immersion ≥ 0.75 V';
+        card.appendChild(hint);
+      }
       container.appendChild(card);
     });
 
@@ -306,9 +312,9 @@
     if (key === 'sound_ads1115_voltage') return 'ADS1115 A1';
     if (key === 'light_voltage') return 'ADS1 A3 • V22';
     if (key === 'soil_voltage') return 'ADS1 A0 • V20';
-    if (key === 'water_voltage') return 'ADS1 A1 • V21';
+    if (key === 'water_voltage') return 'ADS1 A1 • V23';
     if (key === 'flame_voltage') return 'ADS1 A2';
-    if (key === 'gas_voltage') return 'ADS2 A0 • V23';
+    if (key === 'gas_voltage') return 'ADS2 A0 • V28';
     if (key === 'soil_moisture') return data.soil_voltage != null ? 'Derived from A0 • V26' : 'V26';
     if (key === 'pressure_hpa') return 'BMP180 I2C • V35';
     if (key === 'motion_detected') return 'PIR GPIO12 • V36';

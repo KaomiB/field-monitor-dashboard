@@ -82,7 +82,10 @@ const sseClients = new Set();
 let alertLedEnabled = false;
 const FLAME_ALERT_MAX_V = 2.0;
 const GAS_ALERT_MIN_V = 0.8;
-const WATER_ALERT_MIN_V = 1.0;
+// Immersion: trigger when voltage >= this (wet); clear when < WATER_CLEAR_MAX_V (hysteresis avoids flicker)
+const WATER_ALERT_MIN_V = 0.75;
+const WATER_CLEAR_MAX_V = 0.55;
+let lastWaterLedOn = false;
 
 function computeLedCommand() {
   if (!alertLedEnabled) return null;
@@ -93,7 +96,12 @@ function computeLedCommand() {
   if (c.gas_voltage != null && c.gas_voltage >= GAS_ALERT_MIN_V) {
     return { v2: 255, v3: 165, v4: 0, v15: 255 };
   }
-  if (c.water_voltage != null && c.water_voltage >= WATER_ALERT_MIN_V) {
+  // Water: hysteresis — trigger >= 0.75 V, clear only when < 0.55 V
+  const waterNow = c.water_voltage != null && c.water_voltage >= WATER_ALERT_MIN_V;
+  const waterClear = c.water_voltage == null || c.water_voltage < WATER_CLEAR_MAX_V;
+  const waterOn = lastWaterLedOn ? !waterClear : waterNow;
+  lastWaterLedOn = waterOn;
+  if (waterOn && c.water_voltage != null) {
     const intensity = Math.min(255, Math.round(80 + (c.water_voltage - WATER_ALERT_MIN_V) / (2.5 - WATER_ALERT_MIN_V) * 175));
     return { v2: 0, v3: 0, v4: 255, v15: Math.max(80, intensity) };
   }

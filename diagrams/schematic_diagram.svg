@@ -22,9 +22,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.4769504"
-     inkscape:cx="464.80912"
-     inkscape:cy="225.46459"
+     inkscape:zoom="0.7384752"
+     inkscape:cx="726.49698"
+     inkscape:cy="394.05521"
      inkscape:window-width="1594"
      inkscape:window-height="870"
      inkscape:window-x="0"
@@ -134,10 +134,10 @@
      x="1268"
      y="960"
      text-anchor="middle"
-     fill="#222"
-     font-size="14"
+     fill="#222222"
+     font-size="14px"
      font-weight="700"
-     id="text9">Field Monitor — Schematic Diagram (Light)</text>
+     id="text9">Field Monitor — Schematic Circuit Diagram</text>
   <text
      x="1268"
      y="978"
@@ -145,13 +145,6 @@
      fill="#666"
      font-size="10"
      id="text10">ESP8266 SparkFun Blynk Board · INF 148 Final Project</text>
-  <text
-     x="1268"
-     y="992"
-     text-anchor="middle"
-     fill="#888"
-     font-size="9"
-     id="text11">2026-03-15 · Not to scale</text>
   <!-- ============================== -->
   <!--  POWER RAILS                    -->
   <!-- ============================== -->
@@ -1675,6 +1668,14 @@
      id="line105" />
   <line
      x1="880"
+     y1="470"
+     x2="880"
+     y2="500"
+     stroke="#222"
+     stroke-width="1.2"
+     id="line105b" />
+  <line
+     x1="880"
      y1="500"
      x2="940"
      y2="500"
@@ -1875,32 +1876,42 @@
   <!-- ============================== -->
   <rect
      x="1050"
-     y="880"
+     y="829.21967"
      width="150"
      height="56"
      fill="none"
-     stroke="#ccc"
+     stroke="#cccccc"
      stroke-width="1"
      id="rect123" />
   <text
      x="1125"
-     y="900"
+     y="849.21967"
      text-anchor="middle"
-     fill="#555"
-     font-size="9"
+     fill="#555555"
+     font-size="9px"
      id="text124">U1–U5 · R1–R3</text>
   <text
      x="1125"
-     y="916"
+     y="865.21967"
      text-anchor="middle"
-     fill="#555"
-     font-size="9"
+     fill="#555555"
+     font-size="9px"
      id="text125">5 sensors · 2 ADCs</text>
   <text
      x="1125"
-     y="932"
+     y="881.21967"
      text-anchor="middle"
-     fill="#555"
-     font-size="9"
+     fill="#555555"
+     font-size="9px"
      id="text126">1 GPS · 1 PIR · 1 RGB</text>
+  <text
+     xml:space="preserve"
+     style="writing-mode:lr-tb;direction:ltr;fill:none;fill-opacity:0;fill-rule:evenodd"
+     x="1364.9747"
+     y="1216.0192"
+     id="text1"><tspan
+       sodipodi:role="line"
+       id="tspan1"
+       x="1364.9747"
+       y="1216.0192">--</tspan></text>
 </svg>

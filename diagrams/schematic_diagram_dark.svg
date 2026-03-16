@@ -325,6 +325,7 @@
   <line x1="1020" y1="660" x2="940" y2="660" stroke="#e0e0dc" stroke-width="1.2"/>
   <text x="1013" y="655" fill="#e0e0dc" font-size="8">DIN</text>
   <line x1="940" y1="500" x2="940" y2="660" stroke="#e0e0dc" stroke-width="1.2"/>
+  <line x1="880" y1="470" x2="880" y2="500" stroke="#e0e0dc" stroke-width="1.2"/>
   <line x1="880" y1="500" x2="940" y2="500" stroke="#e0e0dc" stroke-width="1.2"/>
 
   <!-- Button (onboard, GPIO0/D3) -->
