@@ -114,7 +114,7 @@ int lastButtonState = -1;           // -1 = unknown, so first read will always "
 unsigned long lastButtonUpdate = 0;
 
 void updateButtonToVirtualLed() {
-if (lastButtonUpdate + BUTTON_UPDATE_RATE_MS > millis())
+if (millis() - lastButtonUpdate < BUTTON_UPDATE_RATE_MS)
   return;
 lastButtonUpdate = millis();
 
@@ -166,4 +166,3 @@ Blynk.run();
 timer.run();           // Initiates BlynkTimer
 updateButtonToVirtualLed();  // Physical button -> V1 LED in app
 }
-

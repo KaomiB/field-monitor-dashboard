@@ -34,5 +34,9 @@ package-lock.json
 .env.local
 .env.*.local
 
+# Arduino sketch credentials (copy secrets.example.h to secrets.h and fill in)
+arduino/secrets.h
+**/secrets.h
+
 # Archives
 *.zip
