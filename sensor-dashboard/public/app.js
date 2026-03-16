@@ -17,7 +17,77 @@
     pressure: '#a0c4a8',
     sound: '#8eb4a2',
     trail: '#4f8a65',
+    warn: '#c6ad6f',
   };
+
+  // Conditions thresholds for weather-style widgets
+  const TEMP_COLD = 10;
+  const TEMP_MILD_MAX = 22;
+  const TEMP_WARM_MAX = 30;
+  const HUMID_DRY_MAX = 35;
+  const HUMID_COMFORT_MAX = 65;
+  const WATER_LOW_MAX = 1.0;
+  const WATER_MID_MAX = 2.0;
+  const LIGHT_DARK_MAX = 0.5;
+  const LIGHT_DIM_MAX = 1.5;
+
+  function weatherIcon(name, fill) {
+    const c = fill || COLORS.textMuted;
+    const icons = {
+      thermometer: `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/></svg>`,
+      droplet: `<svg viewBox="0 0 24 24" fill="${c}" opacity="0.9"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>`,
+      waterLevel: `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8h20v12H2z"/><path d="M6 12v4M12 12v4M18 12v4"/></svg>`,
+      sun: `<svg viewBox="0 0 24 24" fill="${c}" opacity="0.9"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`,
+      cloud: `<svg viewBox="0 0 24 24" fill="${c}" opacity="0.85"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg>`,
+      sunCloud: `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.6"><circle cx="17" cy="10" r="3.5"/><path d="M2 14h16a4 4 0 1 0-1.5-7.7"/></svg>`,
+      flame: `<svg viewBox="0 0 24 24" fill="${c}" opacity="0.9"><path d="M12 23c0 0 8-4 8-12 0-4-2-6-2-6-2 2-2 4-2 6 0 3 2 6 4 8-2 2-4 3-6 3-2 0-4-1-6-3 2-2 4-5 4-8 0-2 0-4-2-6 0 0-2 2-2 6 0 8 8 12 8 12z"/></svg>`,
+      gas: `<svg viewBox="0 0 24 24" fill="none" stroke="${c}" stroke-width="1.8"><path d="M12 2v4M6 6l2.8 2.8M4 12h4M6 18l2.8-2.8M12 22v-4M18 18l-2.8-2.8M20 12h-4M18 6l-2.8 2.8"/><circle cx="12" cy="12" r="3"/></svg>`,
+    };
+    return icons[name] || '';
+  }
+
+  // Alert thresholds: flame drops near fire; gas rises with gas; water rises when wet
+  const FLAME_ALERT_MAX_V = 2.0;
+  const GAS_ALERT_MIN_V = 0.8;
+  const WATER_ALERT_MIN_V = 1.0;
+
+  function isFireDetected(v) { return v != null && v < FLAME_ALERT_MAX_V; }
+  function isGasDetected(v) { return v != null && v >= GAS_ALERT_MIN_V; }
+  function isWaterDetected(v) { return v != null && v >= WATER_ALERT_MIN_V; }
+  function waterIntensity(v) {
+    if (v == null || v < WATER_ALERT_MIN_V) return 0;
+    const t = Math.min(v, 2.5);
+    return Math.round(80 + (t - WATER_ALERT_MIN_V) / (2.5 - WATER_ALERT_MIN_V) * 175);
+  }
+
+  function getTempCondition(c) {
+    if (c == null) return { label: '—', icon: 'thermometer', color: COLORS.textMuted };
+    if (c < TEMP_COLD) return { label: 'Cold', icon: 'thermometer', color: '#7ab8d4' };
+    if (c <= TEMP_MILD_MAX) return { label: 'Mild', icon: 'thermometer', color: COLORS.temp };
+    if (c <= TEMP_WARM_MAX) return { label: 'Warm', icon: 'thermometer', color: '#d9c47a' };
+    return { label: 'Hot', icon: 'thermometer', color: '#d47a7a' };
+  }
+
+  function getHumidityCondition(h) {
+    if (h == null) return { label: '—', icon: 'droplet', color: COLORS.textMuted };
+    if (h < HUMID_DRY_MAX) return { label: 'Dry', icon: 'droplet', color: '#d9c47a' };
+    if (h <= HUMID_COMFORT_MAX) return { label: 'Comfortable', icon: 'droplet', color: COLORS.humidity };
+    return { label: 'Humid', icon: 'droplet', color: '#5b9bd5' };
+  }
+
+  function getWaterLevelCondition(v) {
+    if (v == null) return { label: '—', icon: 'waterLevel', color: COLORS.textMuted };
+    if (v < WATER_LOW_MAX) return { label: 'Low', icon: 'waterLevel', color: COLORS.textMuted };
+    if (v <= WATER_MID_MAX) return { label: 'Medium', icon: 'waterLevel', color: COLORS.water };
+    return { label: 'High', icon: 'waterLevel', color: '#4a8bc2' };
+  }
+
+  function getLightCondition(v) {
+    if (v == null) return { label: '—', icon: 'sun', color: COLORS.textMuted };
+    if (v < LIGHT_DARK_MAX) return { label: 'Dark', icon: 'cloud', color: COLORS.textMuted };
+    if (v <= LIGHT_DIM_MAX) return { label: 'Dim', icon: 'sunCloud', color: '#b8a86a' };
+    return { label: 'Bright', icon: 'sun', color: COLORS.light };
+  }
 
   // GPS map (Leaflet)
   const DEFAULT_LAT = 37.3861;
@@ -27,6 +97,29 @@
   let map = null;
   let marker = null;
   let trailLayer = null;
+
+  // Level bar (min/max) for cards that show a range. Omit for on/off or non-range values.
+  const LEVEL_BARS = {
+    humidity: { min: 0, max: 100, color: COLORS.humidity },
+    soil_moisture: { min: 0, max: 100, color: COLORS.soil },
+    water_voltage: { min: 0, max: 3.3, color: COLORS.water },
+    light_voltage: { min: 0, max: 3.3, color: COLORS.light },
+    sound_adc_voltage: { min: 0, max: 3.3, color: COLORS.sound },
+    sound_ads1115_voltage: { min: 0, max: 3.3, color: COLORS.sound },
+    flame_voltage: { min: 0, max: 3.3, color: COLORS.flame, invert: true },
+    gas_voltage: { min: 0, max: 3.3, color: COLORS.gas },
+    pressure_hpa: { min: 980, max: 1040, color: COLORS.pressure },
+    servo_angle: { min: 0, max: 180, color: COLORS.trail },
+  };
+
+  function levelBarPct(key, raw) {
+    if (raw == null) return null;
+    const cfg = LEVEL_BARS[key];
+    if (!cfg) return null;
+    let pct = (raw - cfg.min) / (cfg.max - cfg.min);
+    if (cfg.invert) pct = 1 - pct;
+    return Math.max(0, Math.min(100, pct * 100));
+  }
 
   const FIELDS = [
     { key: 'temperature_c', label: 'Temperature', unit: '°C', format: (v) => v != null ? v.toFixed(1) : null },
@@ -167,6 +260,13 @@
       const valueSpan = el('span', { className: 'value' + (display === null ? ' unknown' : (f.key === 'door_state' ? ' ' + (raw === 1 ? 'closed' : 'open') : '')) }, [display !== null ? display : '—']);
       card.appendChild(valueSpan);
       if (f.unit && display !== null) card.appendChild(el('span', { className: 'unit' }, [f.unit]));
+      const pct = levelBarPct(f.key, raw);
+      if (pct != null) {
+        const barTrack = el('div', { className: 'card-level-bar' });
+        const barFill = el('div', { className: 'card-level-fill', style: 'width:' + pct + '%;background:' + (LEVEL_BARS[f.key].color) + ';' });
+        barTrack.appendChild(barFill);
+        card.appendChild(barTrack);
+      }
       container.appendChild(card);
     });
 
@@ -313,9 +413,69 @@
     drawSingleSeriesChart(document.getElementById('chartSound'), history, soundKey, COLORS.sound, 'V', 'chartSoundNoData');
   }
 
+  function renderAlertWidgets(data) {
+    const container = document.getElementById('alertWidgets');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const fire = isFireDetected(data.flame_voltage);
+    const gas = isGasDetected(data.gas_voltage);
+    const water = isWaterDetected(data.water_voltage);
+
+    const items = [
+      { id: 'fire', label: 'Fire', status: fire ? 'Detected' : 'OK', icon: 'flame', color: fire ? '#d47a7a' : COLORS.textMuted, triggered: fire },
+      { id: 'gas', label: 'Gas', status: gas ? 'Detected' : 'OK', icon: 'gas', color: gas ? COLORS.warn : COLORS.textMuted, triggered: gas, extraClass: 'gas' },
+      { id: 'water', label: 'Water', status: water ? 'Detected' : 'OK', icon: 'waterLevel', color: water ? COLORS.water : COLORS.textMuted, triggered: water, extraClass: 'water' },
+    ];
+
+    items.forEach(it => {
+      const w = el('div', { className: 'alert-widget' + (it.triggered ? ' triggered' : '') + (it.extraClass ? ' ' + it.extraClass : '') });
+      const iconBox = el('div', { className: 'alert-widget-icon', innerHTML: weatherIcon(it.icon, it.color) });
+      const body = el('div', { className: 'alert-widget-body' });
+      body.appendChild(el('div', { className: 'alert-widget-label' }, [it.label]));
+      body.appendChild(el('div', { className: 'alert-widget-status' }, [it.status]));
+      w.appendChild(iconBox);
+      w.appendChild(body);
+      container.appendChild(w);
+    });
+  }
+
+  function renderWeatherWidgets(data) {
+    const container = document.getElementById('weatherWidgets');
+    if (!container) return;
+    container.innerHTML = '';
+
+    const temp = getTempCondition(data.temperature_c);
+    const humidity = getHumidityCondition(data.humidity);
+    const water = getWaterLevelCondition(data.water_voltage);
+    const light = getLightCondition(data.light_voltage);
+
+    const widgets = [
+      { label: 'Temperature', condition: temp, value: data.temperature_c != null ? data.temperature_c.toFixed(1) + ' °C' : null },
+      { label: 'Humidity', condition: humidity, value: data.humidity != null ? data.humidity.toFixed(0) + '%' : null },
+      { label: 'Water Level', condition: water, value: data.water_voltage != null ? data.water_voltage.toFixed(2) + ' V' : null },
+      { label: 'Light', condition: light, value: data.light_voltage != null ? data.light_voltage.toFixed(2) + ' V' : null },
+    ];
+
+    widgets.forEach(w => {
+      const noData = w.condition.label === '—';
+      const widget = el('div', { className: 'weather-widget' + (noData ? ' no-data' : '') });
+      const iconBox = el('div', { className: 'weather-widget-icon', innerHTML: weatherIcon(w.condition.icon, w.condition.color) });
+      const body = el('div', { className: 'weather-widget-body' });
+      body.appendChild(el('div', { className: 'weather-widget-label' }, [w.label]));
+      body.appendChild(el('div', { className: 'weather-widget-condition' }, [w.condition.label]));
+      if (w.value) body.appendChild(el('div', { className: 'weather-widget-value' }, [w.value]));
+      widget.appendChild(iconBox);
+      widget.appendChild(body);
+      container.appendChild(widget);
+    });
+  }
+
   function applyCurrentData(data) {
     renderCards(data);
     renderFeatureStatus(data);
+    renderWeatherWidgets(data);
+    renderAlertWidgets(data);
     updateMap(data, historyData);
   }
 
@@ -410,14 +570,58 @@
     });
   }
 
+  function exportCSV() {
+    const btn = document.getElementById('exportCsvBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Exporting…'; }
+    fetch(HISTORY_API + '?limit=2000').then(r => r.json()).then(history => {
+      if (!history.length) { alert('No history data to export.'); return; }
+      const cols = Object.keys(history[0]);
+      const rows = [cols.join(',')];
+      history.forEach(row => {
+        rows.push(cols.map(c => {
+          const v = row[c];
+          if (v == null) return '';
+          if (typeof v === 'string' && (v.includes(',') || v.includes('"'))) return '"' + v.replace(/"/g, '""') + '"';
+          return String(v);
+        }).join(','));
+      });
+      const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'field-monitor-' + new Date().toISOString().slice(0, 19).replace(/:/g, '-') + '.csv';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }).catch(() => {}).finally(() => {
+      if (btn) { btn.disabled = false; btn.textContent = 'Export CSV'; }
+    });
+  }
+
   const exportBtn = document.getElementById('exportBtn');
   if (exportBtn) exportBtn.addEventListener('click', exportData);
+
+  const exportCsvBtn = document.getElementById('exportCsvBtn');
+  if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportCSV);
 
   const toggleBtn = document.getElementById('showAllToggle');
   if (toggleBtn) {
     toggleBtn.addEventListener('click', () => {
       showAll = !showAll;
       applyCurrentData(lastData);
+    });
+  }
+
+  const alertLedToggle = document.getElementById('alertLedToggle');
+  if (alertLedToggle) {
+    fetch('/api/led-prefs')
+      .then(r => r.json())
+      .then(prefs => { alertLedToggle.checked = !!prefs.alertLedEnabled; })
+      .catch(() => {});
+    alertLedToggle.addEventListener('change', () => {
+      fetch('/api/led-prefs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ alertLedEnabled: alertLedToggle.checked }),
+      }).catch(() => {});
     });
   }
 

@@ -77,6 +77,29 @@ function loadState() {
 let dirty = false;
 const sseClients = new Set();
 
+// Alert LED preference: when true, POST /api/data response includes led: { v2, v3, v4, v15 }
+// for board NeoPixel (V2=R, V3=G, V4=B, V15=brightness). Fire=red, gas=yellow, water=blue (intensity).
+let alertLedEnabled = false;
+const FLAME_ALERT_MAX_V = 2.0;
+const GAS_ALERT_MIN_V = 0.8;
+const WATER_ALERT_MIN_V = 1.0;
+
+function computeLedCommand() {
+  if (!alertLedEnabled) return null;
+  const c = current;
+  if (c.flame_voltage != null && c.flame_voltage < FLAME_ALERT_MAX_V) {
+    return { v2: 255, v3: 0, v4: 0, v15: 255 };
+  }
+  if (c.gas_voltage != null && c.gas_voltage >= GAS_ALERT_MIN_V) {
+    return { v2: 255, v3: 165, v4: 0, v15: 255 };
+  }
+  if (c.water_voltage != null && c.water_voltage >= WATER_ALERT_MIN_V) {
+    const intensity = Math.min(255, Math.round(80 + (c.water_voltage - WATER_ALERT_MIN_V) / (2.5 - WATER_ALERT_MIN_V) * 175));
+    return { v2: 0, v3: 0, v4: 255, v15: Math.max(80, intensity) };
+  }
+  return { v2: 0, v3: 0, v4: 0, v15: 0 };
+}
+
 function broadcastSSE(eventName, data) {
   const msg = `event: ${eventName}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const res of sseClients) {
@@ -174,7 +197,10 @@ function handleIngest(req, res) {
     return res.status(400).json({ error: 'No recognized sensor fields in JSON body' });
   }
   mergeCurrent(payload);
-  res.status(202).json({ ok: true, updated_at: current.updated_at });
+  const body = { ok: true, updated_at: current.updated_at };
+  const led = computeLedCommand();
+  if (led) body.led = led;
+  res.status(202).json(body);
 }
 
 function handleBlynkWebhook(req, res) {
@@ -205,6 +231,14 @@ function handleBlynkWebhook(req, res) {
   }
   return res.status(400).json({ error: 'Missing device_pin + device_pinValue or recognized sensor fields' });
 }
+
+app.get('/api/led-prefs', (_req, res) => res.json({ alertLedEnabled }));
+
+app.post('/api/led-prefs', (req, res) => {
+  const body = req.body || {};
+  if (typeof body.alertLedEnabled === 'boolean') alertLedEnabled = body.alertLedEnabled;
+  res.json({ alertLedEnabled });
+});
 
 app.post('/api/data', handleIngest);
 app.post('/ingest', handleIngest);

@@ -119,6 +119,19 @@
     .card.door .value.closed { color: var(--success); }
     .card.door .value.open { color: var(--warn); }
 
+    .card-level-bar {
+      margin-top: 0.5rem;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .card-level-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+
     .chart-section {
       background: var(--surface);
       border-radius: var(--radius);
@@ -244,6 +257,141 @@
       background: rgba(106, 163, 122, 0.22);
     }
 
+    /* Weather / conditions widget */
+    .weather-section {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--surface2);
+      margin-bottom: 1.5rem;
+    }
+    .weather-section h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 0 0 1rem 0;
+    }
+    .weather-widgets {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 1rem;
+    }
+    .weather-widget {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.6rem 0.85rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--surface2);
+    }
+    .weather-widget-icon {
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .weather-widget-icon svg {
+      width: 28px;
+      height: 28px;
+      opacity: 0.9;
+    }
+    .weather-widget-body {
+      min-width: 0;
+    }
+    .weather-widget-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.1rem;
+    }
+    .weather-widget-condition {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .weather-widget-value {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .weather-widget.no-data .weather-widget-condition {
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .alerts-section .alert-widgets {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .alert-widget {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--surface2);
+    }
+    .alert-widget.triggered {
+      border-color: var(--danger);
+      background: rgba(192, 111, 98, 0.12);
+    }
+    .alert-widget.triggered.water { border-color: var(--water, #5b9bd5); background: rgba(91, 155, 213, 0.12); }
+    .alert-widget.triggered.gas { border-color: var(--warn); background: rgba(198, 173, 111, 0.15); }
+    .alert-widget-icon { width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .alert-widget-icon svg { width: 22px; height: 22px; }
+    .alert-widget-label { font-size: 0.8rem; font-weight: 600; }
+    .alert-widget-status { font-size: 0.7rem; color: var(--text-muted); }
+    .alert-widget.triggered .alert-widget-status { color: var(--danger); }
+    .alert-widget.triggered.water .alert-widget-status { color: #5b9bd5; }
+    .alert-widget.triggered.gas .alert-widget-status { color: var(--warn); }
+
+    .alert-led-row { margin-top: 0.5rem; }
+    .alert-led-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text);
+    }
+    .alert-led-toggle input { display: none; }
+    .toggle-slider {
+      width: 40px;
+      height: 22px;
+      background: var(--surface2);
+      border-radius: 11px;
+      position: relative;
+      transition: background 0.2s;
+    }
+    .toggle-slider::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      left: 2px;
+      top: 2px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .alert-led-toggle input:checked + .toggle-slider {
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+    }
+    .alert-led-toggle input:checked + .toggle-slider::after {
+      transform: translateX(18px);
+      background: var(--accent);
+    }
+    .toggle-label { color: var(--text-muted); }
+
     .btn-export {
       font-family: 'DM Sans', system-ui, sans-serif;
       font-size: 0.85rem;
@@ -362,6 +510,16 @@
         font-size: 0.7rem;
         padding: 0.2rem 0.45rem;
       }
+      .weather-widgets {
+        grid-template-columns: 1fr 1fr;
+      }
+      .weather-widget {
+        padding: 0.5rem 0.65rem;
+      }
+      .weather-widget-icon svg {
+        width: 24px;
+        height: 24px;
+      }
     }
 
     /* Safe area for notched devices and narrow viewports */
@@ -380,12 +538,33 @@
   <div class="container">
     <header>
       <h1>Field Monitor</h1>
-      <div class="meta"><span id="liveDot" class="live-dot" style="display:none;"></span> <span id="updated">Last update: —</span></div>
+      <div class="header-actions">
+        <div class="meta"><span id="liveDot" class="live-dot" style="display:none;"></span> <span id="updated">Last update: —</span></div>
+        <button id="exportBtn" class="btn-export">Export JSON</button>
+        <button id="exportCsvBtn" class="btn-export">Export CSV</button>
+      </div>
     </header>
 
     <section class="feature-section">
       <h2>Sensor Status</h2>
       <div class="feature-chips" id="featureChips"></div>
+    </section>
+
+    <section class="weather-section">
+      <h2>Conditions</h2>
+      <div class="weather-widgets" id="weatherWidgets"></div>
+    </section>
+
+    <section class="weather-section alerts-section">
+      <h2>Alerts</h2>
+      <div class="alert-widgets" id="alertWidgets"></div>
+      <div class="alert-led-row">
+        <label class="alert-led-toggle">
+          <input type="checkbox" id="alertLedToggle" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-label">Alert LEDs (board NeoPixel: red=fire, blue=water, yellow=gas)</span>
+        </label>
+      </div>
     </section>
 
     <div class="grid" id="cards"></div>

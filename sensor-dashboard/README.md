@@ -30,6 +30,8 @@ Send sensor readings via HTTP POST. The device can send the same logical data yo
 | POST / GET | `http://<host>:3000/api/webhook/blynk` | Blynk webhook: receive datastream updates from Blynk (see [Blynk webhooks](#blynk-webhooks)) |
 | GET | `http://<host>:3000/api/data` | Current values (used by dashboard) |
 | GET | `http://<host>:3000/api/history?limit=100` | Recent history for charts |
+| GET | `http://<host>:3000/api/led-prefs` | Get alert-LED preference (`alertLedEnabled`) |
+| POST | `http://<host>:3000/api/led-prefs` | Set alert-LED preference. Body: `{ "alertLedEnabled": true }` or `false`. When enabled, POST /api/data responses include `led: { v2, v3, v4, v15 }` for board NeoPixel (red=fire, yellow=gas, blue=water). |
 
 ### POST body format (JSON)
 
@@ -160,9 +162,11 @@ The same key is checked on `/api/webhook/blynk` (header, query, or body `api_key
 ## Dashboard
 
 - **Live values:** cards for all supported sensors (temp, humidity, soil, water, flame, light, gas, pressure, motion, sound, GPS, servo); missing data shown as "—".
+- **Conditions:** weather-style widgets (temperature, humidity, water level, light) with icons and condition labels.
+- **Alerts:** fire, gas, and water-level event widgets; when thresholds are exceeded they show "Detected" and are highlighted. Toggle **Alert LEDs** to have the server include `led` (V2, V3, V4, V15) in POST /api/data responses so the device can drive the board NeoPixel (red=fire, yellow=gas, blue=water). See [WEBSITE_GUIDE.md](WEBSITE_GUIDE.md) for firmware response handling.
 - **GPS map:** when valid `gps_latitude` and `gps_longitude` are present, a map shows current position and a trail of recent positions from history.
-- **History chart:** temperature (°C), light (V), and other numeric fields over the last ~100 ingested points (if any).
-- **Polling:** dashboard refreshes every 3 seconds.
+- **History charts:** temperature, humidity, light, soil, water, flame, gas, pressure, sound over recent ingested points.
+- **Polling / SSE:** dashboard refreshes via Server-Sent Events when connected, else every 3 seconds.
 
 No login is required to view the dashboard unless you add your own auth in front of the app.
 

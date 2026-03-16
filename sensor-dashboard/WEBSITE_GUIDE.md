@@ -58,19 +58,33 @@ You can also push data into the dashboard from **Blynk** when the device updates
 ## What you see on the dashboard
 
 - **Header:** Title and last-updated time.
-- **Cards:** One card per sensor quantity:
-  - Temperature °C / °F, Humidity (Si7021)
-  - Soil Voltage, Water Level, Flame, Light (ADS1115 #1)
-  - Gas — MQ2 (ADS1115 #2)
-  - Barometric Pressure (BMP180, when connected)
-  - Motion — PIR (GPIO 12)
-  - Sound ADC raw / voltage (Board A0)
-  - GPS lat / lon / altitude / speed / satellites (SAM-M8Q)
-  - Servo angle
-  - Missing data appears as "—".
-- **Chart:** If history is being stored, a small chart shows Temperature (°C) and Light (V) over recent points.
+- **Sensor Status:** Chips showing which sensors are active, stale, or inactive.
+- **Conditions:** Weather-style widgets (Temperature, Humidity, Water Level, Light) with icons and labels (e.g. Cold/Mild/Warm, Dry/Comfortable/Humid).
+- **Alerts:** Fire, Gas, and Water Level event widgets. When a threshold is exceeded, the widget shows "Detected" and is highlighted (red for fire, yellow for gas, blue for water). Thresholds: flame voltage &lt; 2.0 V = fire; gas voltage ≥ 0.8 V = gas; water voltage ≥ 1.0 V = water.
+- **Alert LEDs toggle:** When enabled, the server includes an `led` object in the **response body** of every POST to `/api/data`. The device can read this and set the board NeoPixel (V2=red, V3=green, V4=blue, V15=brightness): **red** for fire, **yellow** for gas, **blue** at increasing intensity for water level. If the device firmware parses the response (see below), the physical LED will reflect these alerts. Toggle off to stop sending LED commands (device can then use Blynk or default behaviour).
+- **Cards:** One card per sensor quantity (temperature, humidity, soil, water, flame, light, gas, pressure, motion, sound, GPS, servo). Missing data appears as "—".
+- **Map:** GPS position and trail when valid latitude/longitude are present.
+- **Charts:** Time-series for temperature, humidity, light, soil, water, flame, gas, pressure, sound.
 
 No login is required. The page uses a dark theme and is responsive.
+
+### Making the board LED respond to alerts
+
+The dashboard **does not** push to the device directly. When "Alert LEDs" is on, the server **adds** an `led` object to the JSON **response** of each POST to `/api/data`. The device must **read the response body** and apply the values to the NeoPixel (same as Blynk V2, V3, V4, V15).
+
+In your Arduino sketch, after `HTTPClient::POST()` to the dashboard:
+
+1. Read the response with `getString()` or `getStream()`.
+2. Parse the JSON (e.g. ArduinoJson). If the root object has a key `"led"` with `v2`, `v3`, `v4`, `v15`, set your NeoPixel from those values (same as in `BLYNK_WRITE(V2)` etc.) and skip the normal env-LED logic until the next POST.
+3. If there is no `"led"` key or "Alert LEDs" is off, the server omits `led`; the device can keep the previous LED state or revert to Blynk/default.
+
+Example response when fire is detected and Alert LEDs is on:
+
+```json
+{ "ok": true, "updated_at": "2026-03-15T12:00:00.000Z", "led": { "v2": 255, "v3": 0, "v4": 0, "v15": 255 } }
+```
+
+When no alert is active but the toggle is on, the response includes `"led": { "v2": 0, "v3": 0, "v4": 0, "v15": 0 }` to turn the LED off.
 
 ---
 
@@ -120,4 +134,8 @@ sensor-dashboard/
     └── app.js         ← Fetches data, renders cards and chart
 ```
 
-Data is stored **in memory** only. Restarting the server clears current values and history.
+Data is stored **in memory** (and persisted to `data/` every 10 s). The **Alert LEDs** preference is in-memory only and resets to off on server restart.
+
+---
+
+**Reminder:** If you maintain a Google Doc or report that describes the dashboard (e.g. Final Project report), update it to mention the new **Conditions** widgets, **Alerts** (fire/gas/water), and **Alert LEDs** toggle with response-body LED commands for the board NeoPixel.
