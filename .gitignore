@@ -20,6 +20,19 @@ sensor-dashboard/data/
 .DS_Store
 Thumbs.db
 
-# IDE
+# IDE / editor
 .vscode/
 .idea/
+.cursor/
+.claude/
+
+# Lock files (optional; remove if you want to commit for reproducible installs)
+package-lock.json
+
+# Env and secrets
+.env
+.env.local
+.env.*.local
+
+# Archives
+*.zip

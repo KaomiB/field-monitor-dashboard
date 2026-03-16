@@ -1,0 +1,11 @@
+{
+  "name": "blynk-field-monitor",
+  "private": true,
+  "description": "Export SVG diagrams to PNG for Google Docs (preserves text)",
+  "scripts": {
+    "export-diagrams": "node scripts/export-svg-to-png.js"
+  },
+  "devDependencies": {
+    "puppeteer": "^23.0.0"
+  }
+}

@@ -1,0 +1,5 @@
+The SparkFun Blynk Board sketch is maintained in one place only:
+
+  /home/om/Arduino/Sparkfun_Blynk_Board0/Sparkfun_Blynk_Board0.ino
+
+Edit and upload from there. Git is set up in that folder for rollback.
